@@ -1,0 +1,171 @@
+version 12.4
+no service pad
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname cisco871
+!
+boot-start-marker
+boot-end-marker
+!
+logging message-counter syslog
+no logging console
+enable secret 5 $1$/.y2$Psme/oxpikqJn0LsGcm1B/
+!
+aaa new-model
+!
+!
+!
+!
+aaa session-id common
+clock timezone EET 2
+clock summer-time EET recurring last Sun Mar 3:00 last Sun Oct 4:00
+!
+!
+dot11 syslog
+!
+dot11 ssid j7
+ authentication open
+ guest-mode
+ wpa-psk ascii 0 88888888
+!
+ip source-route
+!
+!
+ip dhcp excluded-address 192.168.0.1 192.168.0.100
+ip dhcp excluded-address 192.168.0.200 192.168.0.254
+!
+ip dhcp pool LAN
+   import all
+   network 192.168.0.0 255.255.255.0
+   default-router 192.168.0.1
+   dns-server 192.168.0.1 8.8.8.8
+!
+ip dhcp pool j7
+   import all
+   network 10.10.10.0 255.255.255.0
+   dns-server 8.8.8.8
+   default-router 10.10.10.254
+!
+!
+ip cef
+ip domain name cisco871.net
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+username yuriy_chip privilege 15 secret 5 
+!
+!
+!
+archive
+ log config
+  hidekeys
+!
+!
+ip ssh time-out 60
+ip ssh authentication-retries 2
+ip ssh version 2
+!
+bridge irb
+!
+!
+interface FastEthernet0
+!
+interface FastEthernet1
+!
+interface FastEthernet2
+!
+interface FastEthernet3
+!
+interface FastEthernet4
+ ip address dhcp
+ ip nat outside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+!
+interface Dot11Radio0
+ no ip address
+ !
+ ssid j7
+ !
+ speed basic-1.0 basic-2.0 basic-5.5 6.0 9.0 basic-11.0 12.0 18.0 24.0 36.0 48.0 54.0
+ station-role root
+ world-mode dot11d country RU both
+ bridge-group 1
+ bridge-group 1 subscriber-loop-control
+ bridge-group 1 spanning-disabled
+ bridge-group 1 block-unknown-source
+ no bridge-group 1 source-learning
+ no bridge-group 1 unicast-flooding
+!
+interface Vlan1
+ ip address 192.168.0.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+!
+interface Vlan2
+ ip address 192.168.1.1 255.255.255.0
+ no ip redirects
+ no ip unreachables
+ no ip proxy-arp
+ ip nat inside
+ ip virtual-reassembly
+ bridge-group 1
+!
+interface Dialer0
+ no ip address
+ ip nat outside
+ ip virtual-reassembly
+ no cdp enable
+!
+interface BVI1
+ ip address 10.10.10.254 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+ ip tcp adjust-mss 1408
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip nat inside source list NAT interface FastEthernet4 overload
+ip nat inside source list nat interface FastEthernet4 overload
+ip nat inside source static tcp 192.168.0.102 21 1.1.1 21 extendable
+ip nat inside source static tcp 192.168.0.102 80 1.1.1.1 80 extendable
+ip nat inside source static tcp 192.168.0.102 22 1.1.1.1 2222 extendable
+!
+ip access-list extended NAT
+ permit ip 192.168.0.0 0.0.0.255 any
+ip access-list extended nat
+ permit ip 10.10.10.0 0.0.0.255 any
+!
+access-list 11 permit any
+!
+!
+!
+!
+!
+control-plane
+!
+bridge 1 protocol ieee
+bridge 1 route ip
+!
+line con 0
+ no modem enable
+line aux 0
+line vty 0 4
+ access-class 11 in
+ exec-timeout 60 0
+ logging synchronous
+ transport input ssh
+!
+scheduler max-task-time 5000
+ntp master
+ntp server 172.22.80.11 prefer
+end
